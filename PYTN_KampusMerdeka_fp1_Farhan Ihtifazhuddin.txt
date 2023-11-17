@@ -1,0 +1,1781 @@
+
+
+Final Project 1 (PYTN-KS18)
+
+Anggota Kelompok :
+
+1.  Abraham Linggom Tampubolon
+2.  Farhan Ihtifazhuddin
+3.  Meila Suci
+
+Perkenalan
+
+A. Latar Belakang:
+
+Kasus yang kita pilih dalam proyek ini adalah analisis harga atau tarif
+dari layanan Uber dan Lyft. Uber dan Lyft adalah perusahaan transportasi
+berbasis aplikasi yang populer di banyak negara, termasuk dalam industri
+ridesharing. Kedua perusahaan ini menawarkan layanan transportasi dengan
+menggunakan mobil pribadi yang dioperasikan oleh pengemudi independen.
+
+B. Data yang Digunakan:
+
+Dataset yang digunakan dalam proyek ini adalah "rideshare_kaggle.csv".
+Dataset ini merupakan contoh dataset untuk harga pings (permintaan) dari
+Uber dan Lyft. Dataset ini berisi informasi tentang atribut-atribut yang
+terkait dengan pemesanan, seperti jam, hari, bulan, sumber (destinasi
+awal), tujuan (destinasi akhir), tipe transportasi (Uber atau Lyft), dan
+atribut-atribut lainnya yang relevan.
+
+Dataset ini memiliki sejumlah kolom yang mencakup informasi yang relevan
+untuk analisis harga. Jumlah data yang terdapat dalam dataset ini tidak
+dijelaskan secara spesifik.
+
+C. Objective yang Ingin Dicapai:
+
+Tujuan dari proyek ini adalah untuk menganalisis dataset harga pings
+dari Uber dan Lyft. Dalam analisis ini, kita akan melihat hubungan
+antara atribut-atribut tertentu dalam dataset dengan harga pings yang
+tercatat. Selain itu, kita juga akan mempersiapkan data untuk digunakan
+dalam model regresi linear dan mengimplementasikan model tersebut untuk
+membuat prediksi harga.
+
+Dengan melakukan analisis ini, kita dapat mendapatkan pemahaman yang
+lebih baik tentang faktor-faktor yang mempengaruhi harga pings dalam
+layanan Uber dan Lyft, serta melihat sejauh mana model regresi linear
+dapat digunakan untuk membuat prediksi harga yang akurat.
+
+Import pustaka
+
+Berikut adalah daftar library yang akan digunakan dalam proyek ini:
+
+    import pandas as pd
+    import numpy as np
+
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    from sklearn.preprocessing import RobustScaler
+    from sklearn.model_selection import train_test_split
+    from sklearn.linear_model import  LinearRegression
+    from sklearn.metrics import mean_squared_error
+
+    pd.set_option('display.float_format', '{:.2f}'.format)
+    pd.set_option('display.max_columns', None)
+
+Data Loading
+
+Melakukan proses data loading dari dataset "rideshare_kaggle.csv".
+
+    df = pd.read_csv("rideshare_kaggle.csv")
+    df
+
+                                              id     timestamp  hour  day  month  \
+    0       424553bb-7174-41ea-aeb4-fe06d4f4b9d7 1544952607.89     9   16     12   
+    1       4bd23055-6827-41c6-b23b-3c491f24e74d 1543284023.68     2   27     11   
+    2       981a3613-77af-4620-a42a-0c0866077d1e 1543366822.20     1   28     11   
+    3       c2d88af2-d278-4bfd-a8d0-29ca77cc5512 1543553582.75     4   30     11   
+    4       e0126e1f-8ca9-4f2e-82b3-50505a09db9a 1543463360.22     3   29     11   
+    ...                                      ...           ...   ...  ...    ...   
+    693066  616d3611-1820-450a-9845-a9ff304a4842 1543708386.00    23    1     12   
+    693067  633a3fc3-1f86-4b9e-9d48-2b7132112341 1543708386.00    23    1     12   
+    693068  64d451d0-639f-47a4-9b7c-6fd92fbd264f 1543708386.00    23    1     12   
+    693069  727e5f07-a96b-4ad1-a2c7-9abc3ad55b4e 1543708386.00    23    1     12   
+    693070  e7fdc087-fe86-40a5-a3c3-3b2a8badcbda 1543708386.00    23    1     12   
+
+                       datetime          timezone            source  \
+    0       2018-12-16 09:30:07  America/New_York  Haymarket Square   
+    1       2018-11-27 02:00:23  America/New_York  Haymarket Square   
+    2       2018-11-28 01:00:22  America/New_York  Haymarket Square   
+    3       2018-11-30 04:53:02  America/New_York  Haymarket Square   
+    4       2018-11-29 03:49:20  America/New_York  Haymarket Square   
+    ...                     ...               ...               ...   
+    693066  2018-12-01 23:53:05  America/New_York          West End   
+    693067  2018-12-01 23:53:05  America/New_York          West End   
+    693068  2018-12-01 23:53:05  America/New_York          West End   
+    693069  2018-12-01 23:53:05  America/New_York          West End   
+    693070  2018-12-01 23:53:05  America/New_York          West End   
+
+              destination cab_type                            product_id  \
+    0       North Station     Lyft                             lyft_line   
+    1       North Station     Lyft                          lyft_premier   
+    2       North Station     Lyft                                  lyft   
+    3       North Station     Lyft                           lyft_luxsuv   
+    4       North Station     Lyft                             lyft_plus   
+    ...               ...      ...                                   ...   
+    693066      North End     Uber  6f72dfc5-27f1-42e8-84db-ccc7a75f6969   
+    693067      North End     Uber  55c66225-fbe7-4fd5-9072-eab1ece5e23e   
+    693068      North End     Uber  8cf7e821-f0d3-49c6-8eba-e679c0ebcf6a   
+    693069      North End     Uber  6d318bcc-22a3-4af6-bddd-b409bfce1546   
+    693070      North End     Uber  997acbb5-e102-41e1-b155-9df7de0a73f2   
+
+                    name  price  distance  surge_multiplier  latitude  longitude  \
+    0             Shared   5.00      0.44              1.00     42.21     -71.03   
+    1                Lux  11.00      0.44              1.00     42.21     -71.03   
+    2               Lyft   7.00      0.44              1.00     42.21     -71.03   
+    3       Lux Black XL  26.00      0.44              1.00     42.21     -71.03   
+    4            Lyft XL   9.00      0.44              1.00     42.21     -71.03   
+    ...              ...    ...       ...               ...       ...        ...   
+    693066        UberXL  13.00      1.00              1.00     42.35     -71.06   
+    693067         UberX   9.50      1.00              1.00     42.35     -71.06   
+    693068          Taxi    NaN      1.00              1.00     42.35     -71.06   
+    693069     Black SUV  27.00      1.00              1.00     42.35     -71.06   
+    693070      UberPool  10.00      1.00              1.00     42.35     -71.06   
+
+            temperature  apparentTemperature    short_summary  \
+    0             42.34                37.12   Mostly Cloudy    
+    1             43.58                37.35            Rain    
+    2             38.33                32.93           Clear    
+    3             34.38                29.63           Clear    
+    4             37.44                30.88   Partly Cloudy    
+    ...             ...                  ...              ...   
+    693066        37.05                37.05   Partly Cloudy    
+    693067        37.05                37.05   Partly Cloudy    
+    693068        37.05                37.05   Partly Cloudy    
+    693069        37.05                37.05   Partly Cloudy    
+    693070        37.05                37.05   Partly Cloudy    
+
+                                                 long_summary  precipIntensity  \
+    0                               Rain throughout the day.              0.00   
+    1        Rain until morning, starting again in the eve...             0.13   
+    2                             Light rain in the morning.              0.00   
+    3                      Partly cloudy throughout the day.              0.00   
+    4                      Mostly cloudy throughout the day.              0.00   
+    ...                                                   ...              ...   
+    693066          Light rain in the morning and overnight.              0.00   
+    693067          Light rain in the morning and overnight.              0.00   
+    693068          Light rain in the morning and overnight.              0.00   
+    693069          Light rain in the morning and overnight.              0.00   
+    693070          Light rain in the morning and overnight.              0.00   
+
+            precipProbability  humidity  windSpeed  windGust  windGustTime  \
+    0                    0.00      0.68       8.66      9.17    1545015600   
+    1                    1.00      0.94      11.98     11.98    1543291200   
+    2                    0.00      0.75       7.33      7.33    1543334400   
+    3                    0.00      0.73       5.28      5.28    1543514400   
+    4                    0.00      0.70       9.14      9.14    1543446000   
+    ...                   ...       ...        ...       ...           ...   
+    693066               0.00      0.74       2.34      2.87    1543672800   
+    693067               0.00      0.74       2.34      2.87    1543672800   
+    693068               0.00      0.74       2.34      2.87    1543672800   
+    693069               0.00      0.74       2.34      2.87    1543672800   
+    693070               0.00      0.74       2.34      2.87    1543672800   
+
+            visibility  temperatureHigh  temperatureHighTime  temperatureLow  \
+    0            10.00            43.68           1544968800           34.19   
+    1             4.79            47.30           1543251600           42.10   
+    2            10.00            47.55           1543320000           33.10   
+    3            10.00            45.03           1543510800           28.90   
+    4            10.00            42.18           1543420800           36.71   
+    ...            ...              ...                  ...             ...   
+    693066        9.79            44.76           1543690800           34.83   
+    693067        9.79            44.76           1543690800           34.83   
+    693068        9.79            44.76           1543690800           34.83   
+    693069        9.79            44.76           1543690800           34.83   
+    693070        9.79            44.76           1543690800           34.83   
+
+            temperatureLowTime  apparentTemperatureHigh  \
+    0               1545048000                    37.95   
+    1               1543298400                    43.92   
+    2               1543402800                    44.12   
+    3               1543579200                    38.53   
+    4               1543478400                    35.75   
+    ...                    ...                      ...   
+    693066          1543712400                    44.09   
+    693067          1543712400                    44.09   
+    693068          1543712400                    44.09   
+    693069          1543712400                    44.09   
+    693070          1543712400                    44.09   
+
+            apparentTemperatureHighTime  apparentTemperatureLow  \
+    0                        1544968800                   27.39   
+    1                        1543251600                   36.20   
+    2                        1543320000                   29.11   
+    3                        1543510800                   26.20   
+    4                        1543420800                   30.29   
+    ...                             ...                     ...   
+    693066                   1543690800                   35.48   
+    693067                   1543690800                   35.48   
+    693068                   1543690800                   35.48   
+    693069                   1543690800                   35.48   
+    693070                   1543690800                   35.48   
+
+            apparentTemperatureLowTime                   icon  dewPoint  pressure  \
+    0                       1545044400   partly-cloudy-night      32.70   1021.98   
+    1                       1543291200                  rain      41.83   1003.97   
+    2                       1543392000           clear-night      31.10    992.28   
+    3                       1543575600           clear-night      26.64   1013.73   
+    4                       1543460400   partly-cloudy-night      28.61    998.36   
+    ...                            ...                    ...       ...       ...   
+    693066                  1543712400   partly-cloudy-night      29.65   1023.57   
+    693067                  1543712400   partly-cloudy-night      29.65   1023.57   
+    693068                  1543712400   partly-cloudy-night      29.65   1023.57   
+    693069                  1543712400   partly-cloudy-night      29.65   1023.57   
+    693070                  1543712400   partly-cloudy-night      29.65   1023.57   
+
+            windBearing  cloudCover  uvIndex  visibility.1  ozone  sunriseTime  \
+    0                57        0.72        0         10.00 303.80   1544962084   
+    1                90        1.00        0          4.79 291.10   1543232969   
+    2               240        0.03        0         10.00 315.70   1543319437   
+    3               310        0.00        0         10.00 291.10   1543492370   
+    4               303        0.44        0         10.00 347.70   1543405904   
+    ...             ...         ...      ...           ...    ...          ...   
+    693066          133        0.31        0          9.79 271.50   1543665331   
+    693067          133        0.31        0          9.79 271.50   1543665331   
+    693068          133        0.31        0          9.79 271.50   1543665331   
+    693069          133        0.31        0          9.79 271.50   1543665331   
+    693070          133        0.31        0          9.79 271.50   1543665331   
+
+            sunsetTime  moonPhase  precipIntensityMax  uvIndexTime  \
+    0       1544994864       0.30                0.13   1544979600   
+    1       1543266992       0.64                0.13   1543251600   
+    2       1543353364       0.68                0.11   1543338000   
+    3       1543526114       0.75                0.00   1543507200   
+    4       1543439738       0.72                0.00   1543420800   
+    ...            ...        ...                 ...          ...   
+    693066  1543698855       0.82                0.00   1543683600   
+    693067  1543698855       0.82                0.00   1543683600   
+    693068  1543698855       0.82                0.00   1543683600   
+    693069  1543698855       0.82                0.00   1543683600   
+    693070  1543698855       0.82                0.00   1543683600   
+
+            temperatureMin  temperatureMinTime  temperatureMax  \
+    0                39.89          1545012000           43.68   
+    1                40.49          1543233600           47.30   
+    2                35.36          1543377600           47.55   
+    3                34.67          1543550400           45.03   
+    4                33.10          1543402800           42.18   
+    ...                ...                 ...             ...   
+    693066           31.42          1543658400           44.76   
+    693067           31.42          1543658400           44.76   
+    693068           31.42          1543658400           44.76   
+    693069           31.42          1543658400           44.76   
+    693070           31.42          1543658400           44.76   
+
+            temperatureMaxTime  apparentTemperatureMin  \
+    0               1544968800                   33.73   
+    1               1543251600                   36.20   
+    2               1543320000                   31.04   
+    3               1543510800                   30.30   
+    4               1543420800                   29.11   
+    ...                    ...                     ...   
+    693066          1543690800                   27.77   
+    693067          1543690800                   27.77   
+    693068          1543690800                   27.77   
+    693069          1543690800                   27.77   
+    693070          1543690800                   27.77   
+
+            apparentTemperatureMinTime  apparentTemperatureMax  \
+    0                       1545012000                   38.07   
+    1                       1543291200                   43.92   
+    2                       1543377600                   44.12   
+    3                       1543550400                   38.53   
+    4                       1543392000                   35.75   
+    ...                            ...                     ...   
+    693066                  1543658400                   44.09   
+    693067                  1543658400                   44.09   
+    693068                  1543658400                   44.09   
+    693069                  1543658400                   44.09   
+    693070                  1543658400                   44.09   
+
+            apparentTemperatureMaxTime  
+    0                       1544958000  
+    1                       1543251600  
+    2                       1543320000  
+    3                       1543510800  
+    4                       1543420800  
+    ...                            ...  
+    693066                  1543690800  
+    693067                  1543690800  
+    693068                  1543690800  
+    693069                  1543690800  
+    693070                  1543690800  
+
+    [693071 rows x 57 columns]
+
+    df.info()
+
+    <class 'pandas.core.frame.DataFrame'>
+    RangeIndex: 693071 entries, 0 to 693070
+    Data columns (total 57 columns):
+     #   Column                       Non-Null Count   Dtype  
+    ---  ------                       --------------   -----  
+     0   id                           693071 non-null  object 
+     1   timestamp                    693071 non-null  float64
+     2   hour                         693071 non-null  int64  
+     3   day                          693071 non-null  int64  
+     4   month                        693071 non-null  int64  
+     5   datetime                     693071 non-null  object 
+     6   timezone                     693071 non-null  object 
+     7   source                       693071 non-null  object 
+     8   destination                  693071 non-null  object 
+     9   cab_type                     693071 non-null  object 
+     10  product_id                   693071 non-null  object 
+     11  name                         693071 non-null  object 
+     12  price                        637976 non-null  float64
+     13  distance                     693071 non-null  float64
+     14  surge_multiplier             693071 non-null  float64
+     15  latitude                     693071 non-null  float64
+     16  longitude                    693071 non-null  float64
+     17  temperature                  693071 non-null  float64
+     18  apparentTemperature          693071 non-null  float64
+     19  short_summary                693071 non-null  object 
+     20  long_summary                 693071 non-null  object 
+     21  precipIntensity              693071 non-null  float64
+     22  precipProbability            693071 non-null  float64
+     23  humidity                     693071 non-null  float64
+     24  windSpeed                    693071 non-null  float64
+     25  windGust                     693071 non-null  float64
+     26  windGustTime                 693071 non-null  int64  
+     27  visibility                   693071 non-null  float64
+     28  temperatureHigh              693071 non-null  float64
+     29  temperatureHighTime          693071 non-null  int64  
+     30  temperatureLow               693071 non-null  float64
+     31  temperatureLowTime           693071 non-null  int64  
+     32  apparentTemperatureHigh      693071 non-null  float64
+     33  apparentTemperatureHighTime  693071 non-null  int64  
+     34  apparentTemperatureLow       693071 non-null  float64
+     35  apparentTemperatureLowTime   693071 non-null  int64  
+     36  icon                         693071 non-null  object 
+     37  dewPoint                     693071 non-null  float64
+     38  pressure                     693071 non-null  float64
+     39  windBearing                  693071 non-null  int64  
+     40  cloudCover                   693071 non-null  float64
+     41  uvIndex                      693071 non-null  int64  
+     42  visibility.1                 693071 non-null  float64
+     43  ozone                        693071 non-null  float64
+     44  sunriseTime                  693071 non-null  int64  
+     45  sunsetTime                   693071 non-null  int64  
+     46  moonPhase                    693071 non-null  float64
+     47  precipIntensityMax           693071 non-null  float64
+     48  uvIndexTime                  693071 non-null  int64  
+     49  temperatureMin               693071 non-null  float64
+     50  temperatureMinTime           693071 non-null  int64  
+     51  temperatureMax               693071 non-null  float64
+     52  temperatureMaxTime           693071 non-null  int64  
+     53  apparentTemperatureMin       693071 non-null  float64
+     54  apparentTemperatureMinTime   693071 non-null  int64  
+     55  apparentTemperatureMax       693071 non-null  float64
+     56  apparentTemperatureMaxTime   693071 non-null  int64  
+    dtypes: float64(29), int64(17), object(11)
+    memory usage: 301.4+ MB
+
+    # Mendeskripsikan variabel numerik
+    df.describe().T
+
+                                    count          mean       std           min  \
+    timestamp                   693071.00 1544045709.76 689192.49 1543203646.00   
+    hour                        693071.00         11.62      6.95          0.00   
+    day                         693071.00         17.79      9.98          1.00   
+    month                       693071.00         11.59      0.49         11.00   
+    price                       637976.00         16.55      9.32          2.50   
+    distance                    693071.00          2.19      1.14          0.02   
+    surge_multiplier            693071.00          1.01      0.09          1.00   
+    latitude                    693071.00         42.34      0.05         42.21   
+    longitude                   693071.00        -71.07      0.02        -71.11   
+    temperature                 693071.00         39.58      6.73         18.91   
+    apparentTemperature         693071.00         35.88      7.92         12.13   
+    precipIntensity             693071.00          0.01      0.03          0.00   
+    precipProbability           693071.00          0.15      0.33          0.00   
+    humidity                    693071.00          0.74      0.14          0.38   
+    windSpeed                   693071.00          6.19      3.15          0.45   
+    windGust                    693071.00          8.47      5.29          0.80   
+    windGustTime                693071.00 1544048883.54 692824.40 1543150800.00   
+    visibility                  693071.00          8.47      2.60          0.72   
+    temperatureHigh             693071.00         45.04      6.00         32.68   
+    temperatureHighTime         693071.00 1544049894.63 693792.11 1543154400.00   
+    temperatureLow              693071.00         34.15      6.38         17.85   
+    temperatureLowTime          693071.00 1544102170.88 692292.33 1543233600.00   
+    apparentTemperatureHigh     693071.00         41.61      7.67         22.62   
+    apparentTemperatureHighTime 693071.00 1544050235.26 694169.87 1543186800.00   
+    apparentTemperatureLow      693071.00         30.14      8.06         11.81   
+    apparentTemperatureLowTime  693071.00 1544098720.41 692737.83 1543233600.00   
+    dewPoint                    693071.00         31.66      9.14          4.39   
+    pressure                    693071.00       1010.09     13.47        988.09   
+    windBearing                 693071.00        220.06     99.10          2.00   
+    cloudCover                  693071.00          0.69      0.36          0.00   
+    uvIndex                     693071.00          0.25      0.47          0.00   
+    visibility.1                693071.00          8.47      2.60          0.72   
+    ozone                       693071.00        313.51     27.95        269.40   
+    sunriseTime                 693071.00 1544027098.20 691139.27 1543146535.00   
+    sunsetTime                  693071.00 1544060438.64 690663.39 1543180615.00   
+    moonPhase                   693071.00          0.58      0.24          0.09   
+    precipIntensityMax          693071.00          0.04      0.06          0.00   
+    uvIndexTime                 693071.00 1544043966.24 691202.77 1543161600.00   
+    temperatureMin              693071.00         33.46      6.47         15.63   
+    temperatureMinTime          693071.00 1544041609.57 690195.44 1543122000.00   
+    temperatureMax              693071.00         45.26      5.65         33.51   
+    temperatureMaxTime          693071.00 1544047300.03 690135.34 1543154400.00   
+    apparentTemperatureMin      693071.00         29.73      7.11         11.81   
+    apparentTemperatureMinTime  693071.00 1544048034.74 687186.19 1543136400.00   
+    apparentTemperatureMax      693071.00         42.00      6.94         28.95   
+    apparentTemperatureMaxTime  693071.00 1544047993.95 691077.65 1543186800.00   
+
+                                          25%           50%           75%  \
+    timestamp                   1543443968.00 1543737478.00 1544827509.00   
+    hour                                 6.00         12.00         18.00   
+    day                                 13.00         17.00         28.00   
+    month                               11.00         12.00         12.00   
+    price                                9.00         13.50         22.50   
+    distance                             1.28          2.16          2.92   
+    surge_multiplier                     1.00          1.00          1.00   
+    latitude                            42.35         42.35         42.36   
+    longitude                          -71.08        -71.06        -71.05   
+    temperature                         36.45         40.49         43.58   
+    apparentTemperature                 31.91         35.90         40.08   
+    precipIntensity                      0.00          0.00          0.00   
+    precipProbability                    0.00          0.00          0.00   
+    humidity                             0.64          0.71          0.88   
+    windSpeed                            3.41          5.91          8.41   
+    windGust                             4.06          7.55         11.74   
+    windGustTime                1543431600.00 1543755600.00 1544846400.00   
+    visibility                           8.43          9.88         10.00   
+    temperatureHigh                     42.57         44.68         46.91   
+    temperatureHighTime         1543438800.00 1543788000.00 1544814000.00   
+    temperatureLow                      30.17         34.18         38.73   
+    temperatureLowTime          1543489200.00 1543816800.00 1544835600.00   
+    apparentTemperatureHigh             36.57         40.95         44.12   
+    apparentTemperatureHighTime 1543438800.00 1543788000.00 1544817600.00   
+    apparentTemperatureLow              27.70         30.03         35.32   
+    apparentTemperatureLowTime  1543478400.00 1543816800.00 1544835600.00   
+    dewPoint                            27.49         30.69         38.12   
+    pressure                           999.82       1009.25       1021.86   
+    windBearing                        124.00        258.00        303.00   
+    cloudCover                           0.37          0.82          1.00   
+    uvIndex                              0.00          0.00          0.00   
+    visibility.1                         8.43          9.88         10.00   
+    ozone                              290.90        307.40        331.80   
+    sunriseTime                 1543405938.00 1543751761.00 1544789239.00   
+    sunsetTime                  1543439721.00 1543785233.00 1544822019.00   
+    moonPhase                            0.30          0.68          0.79   
+    precipIntensityMax                   0.00          0.00          0.09   
+    uvIndexTime                 1543420800.00 1543770000.00 1544806800.00   
+    temperatureMin                      30.17         34.24         38.88   
+    temperatureMinTime          1543399200.00 1543726800.00 1544788800.00   
+    temperatureMax                      42.57         44.68         46.91   
+    temperatureMaxTime          1543438800.00 1543788000.00 1544814000.00   
+    apparentTemperatureMin              27.76         30.13         35.71   
+    apparentTemperatureMinTime  1543399200.00 1543744800.00 1544788800.00   
+    apparentTemperatureMax              36.57         40.95         44.12   
+    apparentTemperatureMaxTime  1543438800.00 1543788000.00 1544817600.00   
+
+                                          max  
+    timestamp                   1545160511.00  
+    hour                                23.00  
+    day                                 30.00  
+    month                               12.00  
+    price                               97.50  
+    distance                             7.86  
+    surge_multiplier                     3.00  
+    latitude                            42.37  
+    longitude                          -71.03  
+    temperature                         57.22  
+    apparentTemperature                 57.22  
+    precipIntensity                      0.14  
+    precipProbability                    1.00  
+    humidity                             0.96  
+    windSpeed                           15.00  
+    windGust                            27.25  
+    windGustTime                1545127200.00  
+    visibility                          10.00  
+    temperatureHigh                     57.87  
+    temperatureHighTime         1545159600.00  
+    temperatureLow                      46.60  
+    temperatureLowTime          1545220800.00  
+    apparentTemperatureHigh             57.20  
+    apparentTemperatureHighTime 1545159600.00  
+    apparentTemperatureLow              47.25  
+    apparentTemperatureLowTime  1545199200.00  
+    dewPoint                            50.67  
+    pressure                          1035.55  
+    windBearing                        356.00  
+    cloudCover                           1.00  
+    uvIndex                              2.00  
+    visibility.1                        10.00  
+    ozone                              378.90  
+    sunriseTime                 1545135001.00  
+    sunsetTime                  1545167693.00  
+    moonPhase                            0.93  
+    precipIntensityMax                   0.15  
+    uvIndexTime                 1545152400.00  
+    temperatureMin                      43.10  
+    temperatureMinTime          1545192000.00  
+    temperatureMax                      57.87  
+    temperatureMaxTime          1545109200.00  
+    apparentTemperatureMin              40.05  
+    apparentTemperatureMinTime  1545134400.00  
+    apparentTemperatureMax              57.20  
+    apparentTemperatureMaxTime  1545109200.00  
+
+    # Mendeskripsikan variabel object
+    df.describe(include=object).T
+
+                    count  unique                                   top    freq
+    id             693071  693071  424553bb-7174-41ea-aeb4-fe06d4f4b9d7       1
+    datetime       693071   31350                   2018-11-26 23:21:14     156
+    timezone       693071       1                      America/New_York  693071
+    source         693071      12                    Financial District   58857
+    destination    693071      12                    Financial District   58851
+    cab_type       693071       2                                  Uber  385663
+    product_id     693071      13  6f72dfc5-27f1-42e8-84db-ccc7a75f6969   55096
+    name           693071      13                                UberXL   55096
+    short_summary  693071       9                             Overcast   218895
+    long_summary   693071      11    Mostly cloudy throughout the day.   202340
+    icon           693071       7                               cloudy   218895
+
+Data Cleaning
+
+Melakukan proses cleaning pada data, seperti memberi nama baru untuk
+setiap kolom, mengisi missing values, menghapus kolom yang tidak
+dipakai, dsb.
+
+    # Menghapus kolom data yang tidak diperlukan
+    df = df.drop(columns=['id', 'timezone', 'apparentTemperatureMaxTime', 'apparentTemperatureMinTime', 'temperatureMaxTime', 'temperatureMinTime',
+                          'uvIndexTime', 'sunsetTime', 'sunriseTime', 'apparentTemperatureLowTime', 'apparentTemperatureHighTime', 'temperatureLowTime',
+                          'temperatureHighTime', 'windGustTime', 'timestamp'])
+    df.sample(5)
+
+            hour  day  month             datetime             source  \
+    649047    19    2     12  2018-12-02 19:17:58          North End   
+    423910     1    3     12  2018-12-03 01:32:58      North Station   
+    454885    12   28     11  2018-11-28 12:11:08   Theatre District   
+    223594     2   30     11  2018-11-30 02:03:03             Fenway   
+    476712     7    1     12  2018-12-01 07:07:59  Boston University   
+
+                   destination cab_type                            product_id  \
+    649047            Back Bay     Lyft                             lyft_line   
+    423910       South Station     Uber  55c66225-fbe7-4fd5-9072-eab1ece5e23e   
+    454885              Fenway     Uber  55c66225-fbe7-4fd5-9072-eab1ece5e23e   
+    223594  Financial District     Lyft                             lyft_line   
+    476712         Beacon Hill     Lyft                                  lyft   
+
+              name  price  distance  surge_multiplier  latitude  longitude  \
+    649047  Shared   7.00      2.55              1.00     42.35     -71.08   
+    423910   UberX   7.50      1.34              1.00     42.36     -71.05   
+    454885   UberX  10.00      2.66              1.00     42.36     -71.07   
+    223594  Shared   5.00      4.33              1.00     42.37     -71.06   
+    476712    Lyft  10.50      2.72              1.00     42.37     -71.06   
+
+            temperature  apparentTemperature    short_summary  \
+    649047        49.88                49.22      Light Rain    
+    423910        47.93                47.93        Overcast    
+    454885        36.53                32.06   Mostly Cloudy    
+    223594        37.11                31.86           Clear    
+    476712        34.37                31.07        Overcast    
+
+                                          long_summary  precipIntensity  \
+    649047                  Light rain until evening.              0.02   
+    423910                  Light rain until evening.              0.00   
+    454885          Mostly cloudy throughout the day.              0.00   
+    223594          Partly cloudy throughout the day.              0.00   
+    476712   Light rain in the morning and overnight.              0.00   
+
+            precipProbability  humidity  windSpeed  windGust  visibility  \
+    649047               1.00      0.93       3.38      3.38        3.05   
+    423910               0.00      0.95       2.70      3.62        4.32   
+    454885               0.00      0.71       5.42      6.95        9.97   
+    223594               0.00      0.67       6.68      8.53        9.97   
+    476712               0.00      0.78       3.76      3.82        9.89   
+
+            temperatureHigh  temperatureLow  apparentTemperatureHigh  \
+    649047            50.80           44.97                    50.13   
+    423910            50.99           45.04                    50.32   
+    454885            42.61           37.64                    36.60   
+    223594            44.66           28.68                    38.30   
+    476712            44.72           34.90                    44.05   
+
+            apparentTemperatureLow                 icon  dewPoint  pressure  \
+    649047                   45.62                rain      48.02   1004.33   
+    423910                   45.69              cloudy      46.66   1002.81   
+    454885                   32.23   partly-cloudy-day      28.14    991.36   
+    223594                   27.26         clear-night      27.27   1011.84   
+    476712                   35.55              cloudy      28.31   1019.63   
+
+            windBearing  cloudCover  uvIndex  visibility.1  ozone  moonPhase  \
+    649047          159        1.00        0          3.05 282.50       0.86   
+    423910          299        1.00        0          4.32 288.10       0.86   
+    454885          261        0.54        0          9.97 347.50       0.72   
+    223594          318        0.03        0          9.97 296.90       0.75   
+    476712          301        1.00        0          9.89 286.60       0.82   
+
+            precipIntensityMax  temperatureMin  temperatureMax  \
+    649047                0.09           36.32           50.80   
+    423910                0.09           36.60           50.99   
+    454885                0.00           33.83           42.61   
+    223594                0.00           35.15           44.66   
+    476712                0.00           31.55           44.72   
+
+            apparentTemperatureMin  apparentTemperatureMax  
+    649047                   35.84                   50.13  
+    423910                   35.85                   50.32  
+    454885                   30.13                   36.60  
+    223594                   30.98                   38.30  
+    476712                   27.95                   44.05  
+
+    # Mengubah tipe data datetime yang semula object menjadi datetime
+    df['datetime'] = pd.to_datetime(df['datetime'])
+    df.sample()
+
+            hour  day  month            datetime            source destination  \
+    303734    19   17     12 2018-12-17 19:35:10  Theatre District      Fenway   
+
+           cab_type product_id    name  price  distance  surge_multiplier  \
+    303734     Lyft  lyft_line  Shared   7.00      3.05              1.00   
+
+            latitude  longitude  temperature  apparentTemperature short_summary  \
+    303734     42.34     -71.09        40.78                36.05     Overcast    
+
+                            long_summary  precipIntensity  precipProbability  \
+    303734   Light rain in the morning.              0.00               0.00   
+
+            humidity  windSpeed  windGust  visibility  temperatureHigh  \
+    303734      0.69       7.06      9.44        9.97            41.58   
+
+            temperatureLow  apparentTemperatureHigh  apparentTemperatureLow  \
+    303734           23.95                    36.21                   12.05   
+
+                icon  dewPoint  pressure  windBearing  cloudCover  uvIndex  \
+    303734   cloudy      31.55    999.84          284        0.89        0   
+
+            visibility.1  ozone  moonPhase  precipIntensityMax  temperatureMin  \
+    303734          9.97 344.90       0.33                0.02           34.00   
+
+            temperatureMax  apparentTemperatureMin  apparentTemperatureMax  
+    303734           41.58                   28.18                   36.21  
+
+    # Mengetahui jumlah kemunculan dari masing-masing nilai pada kolom 'icon'
+    df['icon'].value_counts()
+
+     cloudy                  218895
+     partly-cloudy-night     158030
+     partly-cloudy-day       115404
+     rain                    104556
+     clear-night              60294
+     clear-day                26832
+     fog                       9060
+    Name: icon, dtype: int64
+
+    # Mengetahui jumlah kategori dalam kolom long summary
+    df['long_summary'].nunique()
+
+    11
+
+    df.groupby(['short_summary', 'long_summary'])['hour'].count()
+
+    short_summary       long_summary                                        
+     Clear               Foggy in the morning.                                   3744
+                         Light rain in the morning and overnight.                3744
+                         Light rain in the morning.                              3900
+                         Mostly cloudy throughout the day.                      34632
+                         Partly cloudy throughout the day.                      37362
+                         Rain throughout the day.                                3744
+     Drizzle             Light rain in the morning.                              5616
+                         Rain until morning, starting again in the evening.      1680
+     Foggy               Foggy in the morning.                                   5616
+                         Rain in the morning and afternoon.                        84
+                         Rain until morning, starting again in the evening.      3360
+     Light Rain          Light rain in the morning and overnight.                1872
+                         Light rain in the morning.                             21840
+                         Light rain until evening.                              16848
+                         Rain throughout the day.                               11232
+                         Rain until morning, starting again in the evening.      3120
+     Mostly Cloudy       Foggy in the morning.                                  11076
+                         Light rain in the morning and overnight.               18720
+                         Light rain in the morning.                             16848
+                         Mostly cloudy throughout the day.                      57311
+                         Overcast throughout the day.                            3744
+                         Partly cloudy throughout the day.                      36639
+                         Rain throughout the day.                                1872
+     Overcast            Foggy in the morning.                                  14976
+                         Light rain in the morning and overnight.                7488
+                         Light rain in the morning.                             36192
+                         Light rain until evening.                              14976
+                         Mostly cloudy throughout the day.                      68484
+                         Overcast throughout the day.                            3744
+                         Partly cloudy throughout the day.                      25896
+                         Possible drizzle in the morning.                        1872
+                         Rain in the morning and afternoon.                       420
+                         Rain throughout the day.                               26208
+                         Rain until morning, starting again in the evening.     18639
+     Partly Cloudy       Foggy in the morning.                                   9360
+                         Light rain in the morning and overnight.               18720
+                         Light rain in the morning.                              8105
+                         Mostly cloudy throughout the day.                      41913
+                         Partly cloudy throughout the day.                      45382
+                         Rain throughout the day.                                3744
+     Possible Drizzle    Light rain in the morning.                              6864
+                         Light rain until evening.                               3744
+                         Rain throughout the day.                                3744
+                         Rain until morning, starting again in the evening.      4284
+     Rain                Light rain in the morning.                              3120
+                         Rain throughout the day.                                3744
+                         Rain until morning, starting again in the evening.     16848
+    Name: hour, dtype: int64
+
+    # Data-data yang akan dihapus
+    lst_remove_temp = df.filter(regex='temperature|apparent', axis=1).columns.to_list()
+    lst_remove_temp.remove('temperature')
+    lst_remove_temp
+
+    ['apparentTemperature',
+     'temperatureHigh',
+     'temperatureLow',
+     'apparentTemperatureHigh',
+     'apparentTemperatureLow',
+     'temperatureMin',
+     'temperatureMax',
+     'apparentTemperatureMin',
+     'apparentTemperatureMax']
+
+    # Menghapus data yang tidak diperlukan lagi
+    df = df.drop(columns=['long_summary', 'icon', 'latitude', 'longitude'])
+    df = df.drop(columns='datetime')
+    df = df.drop(columns=lst_remove_temp)
+
+    df.info()
+
+    <class 'pandas.core.frame.DataFrame'>
+    RangeIndex: 693071 entries, 0 to 693070
+    Data columns (total 28 columns):
+     #   Column              Non-Null Count   Dtype  
+    ---  ------              --------------   -----  
+     0   hour                693071 non-null  int64  
+     1   day                 693071 non-null  int64  
+     2   month               693071 non-null  int64  
+     3   source              693071 non-null  object 
+     4   destination         693071 non-null  object 
+     5   cab_type            693071 non-null  object 
+     6   product_id          693071 non-null  object 
+     7   name                693071 non-null  object 
+     8   price               637976 non-null  float64
+     9   distance            693071 non-null  float64
+     10  surge_multiplier    693071 non-null  float64
+     11  temperature         693071 non-null  float64
+     12  short_summary       693071 non-null  object 
+     13  precipIntensity     693071 non-null  float64
+     14  precipProbability   693071 non-null  float64
+     15  humidity            693071 non-null  float64
+     16  windSpeed           693071 non-null  float64
+     17  windGust            693071 non-null  float64
+     18  visibility          693071 non-null  float64
+     19  dewPoint            693071 non-null  float64
+     20  pressure            693071 non-null  float64
+     21  windBearing         693071 non-null  int64  
+     22  cloudCover          693071 non-null  float64
+     23  uvIndex             693071 non-null  int64  
+     24  visibility.1        693071 non-null  float64
+     25  ozone               693071 non-null  float64
+     26  moonPhase           693071 non-null  float64
+     27  precipIntensityMax  693071 non-null  float64
+    dtypes: float64(17), int64(5), object(6)
+    memory usage: 148.1+ MB
+
+Handling missing value
+
+    # Memeriksa kolom yang memiliki missing value
+    pd.DataFrame(df.isna().sum())
+
+                            0
+    hour                    0
+    day                     0
+    month                   0
+    source                  0
+    destination             0
+    cab_type                0
+    product_id              0
+    name                    0
+    price               55095
+    distance                0
+    surge_multiplier        0
+    temperature             0
+    short_summary           0
+    precipIntensity         0
+    precipProbability       0
+    humidity                0
+    windSpeed               0
+    windGust                0
+    visibility              0
+    dewPoint                0
+    pressure                0
+    windBearing             0
+    cloudCover              0
+    uvIndex                 0
+    visibility.1            0
+    ozone                   0
+    moonPhase               0
+    precipIntensityMax      0
+
+    # Menghapus missing value pada kolom 'price'
+    df = df[df['price'].notna()]
+    df.isna().any()
+
+    hour                  False
+    day                   False
+    month                 False
+    source                False
+    destination           False
+    cab_type              False
+    product_id            False
+    name                  False
+    price                 False
+    distance              False
+    surge_multiplier      False
+    temperature           False
+    short_summary         False
+    precipIntensity       False
+    precipProbability     False
+    humidity              False
+    windSpeed             False
+    windGust              False
+    visibility            False
+    dewPoint              False
+    pressure              False
+    windBearing           False
+    cloudCover            False
+    uvIndex               False
+    visibility.1          False
+    ozone                 False
+    moonPhase             False
+    precipIntensityMax    False
+    dtype: bool
+
+Explorasi Data
+
+Distribusi Harga
+
+    plt.figure(figsize=(10, 6))
+    sns.histplot(df['price'], bins=30, kde=True)
+    plt.title('Distribusi Harga')
+    plt.xlabel('Harga')
+    plt.ylabel('Jumlah')
+    plt.show()
+
+[]
+
+Hubungan Jarak dan Harga
+
+    plt.figure(figsize=(10, 6))
+    sns.scatterplot(data=df, x='distance', y='price')
+    plt.title('Hubungan Jarak dan Harga')
+    plt.xlabel('Jarak')
+    plt.ylabel('Harga')
+    plt.show()
+
+[]
+
+Hubungan Jam dan Harga
+
+    plt.figure(figsize=(10, 6))
+    sns.boxplot(data=df, x='hour', y='price')
+    plt.title('Hubungan Jam dan Harga')
+    plt.xlabel('Jam')
+    plt.ylabel('Harga')
+    plt.show()
+
+[]
+
+Hubungan Tipe Kendaraan dan Harga
+
+    plt.figure(figsize=(10, 6))
+    sns.boxplot(data=df, x='cab_type', y='price')
+    plt.title('Hubungan Tipe Kendaraan dan Harga')
+    plt.xlabel('Tipe Kendaraan')
+    plt.ylabel('Harga')
+    plt.show()
+
+[]
+
+Jumlah Penggunaan Uber dan Lyft
+
+    plt.figure(figsize=(10, 6))
+    df['cab_type'].value_counts().sort_index().plot(kind='bar')
+    plt.title('Penggunaan Uber dan Lyft')
+    plt.xlabel('Type Kendaraan')
+    plt.ylabel('Jumlah Pengguna')
+    plt.show()
+
+[]
+
+Pemesanan taxi Berdasarkan Cuaca
+
+    plt.figure(figsize=(10, 6))
+    df['short_summary'].value_counts().sort_index().plot(kind='bar')
+    plt.title('Pemesanan taxi Berdasarkan Cuaca')
+    plt.xlabel('Cuaca')
+    plt.ylabel('Jumlah Pengguna')
+    plt.show()
+
+[]
+
+Jumlah data per Bulan
+
+    plt.figure(figsize=(10, 6))
+    df['month'].value_counts().sort_index().plot(kind='bar')
+    plt.title('Jumlah Data per Bulan')
+    plt.xlabel('Bulan')
+    plt.ylabel('Jumlah Data')
+    plt.show()
+
+[]
+
+Data Preprocessing
+
+Outlier
+
+Outlier merupakan nilai yang jauh berbeda dengan nilai yang lain pada
+dataset. Nilai ini dapat menjadi masalah dan memengaruhi hasil analisis,
+sehingga nilai outlier perlu dihapus
+
+    # Mendeteksi outlier dengan metode IQR (Interquartile Range)
+    Q1 = df['price'].quantile(0.25)  # kuartil pertama
+    Q3 = df['price'].quantile(0.75)  # kuartil ketiga
+    IQR = Q3 - Q1
+
+    lower_IQR = Q1 - 1.5 * IQR
+    upper_IQR = Q3 + 1.5 * IQR
+
+    outliers_upper = df['price'][(df['price'] > upper_IQR)]
+    outliers_lower = df['price'][(df['price'] < lower_IQR)]
+
+    # Menghapus data outlier
+    df = df.loc[df['price'] < upper_IQR]
+    df = df.loc[df['price'] > lower_IQR]
+
+    sns.boxplot(x=df['price'])
+    plt.show()
+
+[]
+
+Encoding
+
+Pada Encoding, dataset tersebut diubah yang sebelumnya kategori/label
+menjadi numerik atau angka.
+
+    # Mengkategorikan data yang akan di Encoding
+    object_columns = df.select_dtypes(include=['object']).columns.tolist()
+    numeric_columns = df.select_dtypes(exclude=['object']).columns.tolist()
+    object_columns
+
+    ['source', 'destination', 'cab_type', 'product_id', 'name', 'short_summary']
+
+    # Mengetahui jumlah nilai unik pada tiap kolom
+    df[object_columns].nunique()
+
+    source           12
+    destination      12
+    cab_type          2
+    product_id       12
+    name             12
+    short_summary     9
+    dtype: int64
+
+    encoded_df = df[object_columns]
+    not_encoded_df = df[numeric_columns]
+
+    # Menyimpan DataFrime ke dalam file pickle
+    df.to_pickle('df.pkl')
+
+    # Melakukan encoding
+    encoded_df = pd.get_dummies(encoded_df).astype('int')
+    df = pd.concat([not_encoded_df, encoded_df], axis = 1)
+    df.sample(3)
+
+            hour  day  month  price  distance  surge_multiplier  temperature  \
+    115007    11    1     12  27.50      2.61              1.00        32.31   
+    670542     6    3     12   7.00      2.56              1.00        45.58   
+    676014     1   17     12  10.50      2.66              1.00        40.61   
+
+            precipIntensity  precipProbability  humidity  windSpeed  windGust  \
+    115007             0.00               0.00      0.79       4.24      4.75   
+    670542             0.00               0.00      0.96       1.25      2.09   
+    676014             0.13               1.00      0.91       8.68     11.82   
+
+            visibility  dewPoint  pressure  windBearing  cloudCover  uvIndex  \
+    115007        9.85     26.59   1021.74          320        0.67        0   
+    670542        1.41     44.50   1001.06          307        1.00        0   
+    676014        2.63     38.14   1011.49           52        0.98        0   
+
+            visibility.1  ozone  moonPhase  precipIntensityMax  source_Back Bay  \
+    115007          9.85 281.40       0.82                0.00                0   
+    670542          1.41 290.90       0.89                0.00                0   
+    676014          2.63 325.00       0.30                0.13                0   
+
+            source_Beacon Hill  source_Boston University  source_Fenway  \
+    115007                   0                         0              0   
+    670542                   1                         0              0   
+    676014                   0                         0              1   
+
+            source_Financial District  source_Haymarket Square  source_North End  \
+    115007                          0                        0                 0   
+    670542                          0                        0                 0   
+    676014                          0                        0                 0   
+
+            source_North Station  source_Northeastern University  \
+    115007                     0                               1   
+    670542                     0                               0   
+    676014                     0                               0   
+
+            source_South Station  source_Theatre District  source_West End  \
+    115007                     0                        0                0   
+    670542                     0                        0                0   
+    676014                     0                        0                0   
+
+            destination_Back Bay  destination_Beacon Hill  \
+    115007                     0                        1   
+    670542                     0                        0   
+    676014                     0                        0   
+
+            destination_Boston University  destination_Fenway  \
+    115007                              0                   0   
+    670542                              0                   0   
+    676014                              0                   0   
+
+            destination_Financial District  destination_Haymarket Square  \
+    115007                               0                             0   
+    670542                               0                             0   
+    676014                               0                             0   
+
+            destination_North End  destination_North Station  \
+    115007                      0                          0   
+    670542                      0                          0   
+    676014                      0                          0   
+
+            destination_Northeastern University  destination_South Station  \
+    115007                                    0                          0   
+    670542                                    1                          0   
+    676014                                    0                          0   
+
+            destination_Theatre District  destination_West End  cab_type_Lyft  \
+    115007                             0                     0              0   
+    670542                             0                     0              1   
+    676014                             1                     0              0   
+
+            cab_type_Uber  product_id_55c66225-fbe7-4fd5-9072-eab1ece5e23e  \
+    115007              1                                                0   
+    670542              0                                                0   
+    676014              1                                                1   
+
+            product_id_6c84fd89-3f11-4782-9b50-97c468b19529  \
+    115007                                                0   
+    670542                                                0   
+    676014                                                0   
+
+            product_id_6d318bcc-22a3-4af6-bddd-b409bfce1546  \
+    115007                                                1   
+    670542                                                0   
+    676014                                                0   
+
+            product_id_6f72dfc5-27f1-42e8-84db-ccc7a75f6969  \
+    115007                                                0   
+    670542                                                0   
+    676014                                                0   
+
+            product_id_997acbb5-e102-41e1-b155-9df7de0a73f2  \
+    115007                                                0   
+    670542                                                0   
+    676014                                                0   
+
+            product_id_9a0e7b09-b92b-4c41-9779-2ad22b4d779d  product_id_lyft  \
+    115007                                                0                0   
+    670542                                                0                0   
+    676014                                                0                0   
+
+            product_id_lyft_line  product_id_lyft_lux  product_id_lyft_luxsuv  \
+    115007                     0                    0                       0   
+    670542                     1                    0                       0   
+    676014                     0                    0                       0   
+
+            product_id_lyft_plus  product_id_lyft_premier  name_Black  \
+    115007                     0                        0           0   
+    670542                     0                        0           0   
+    676014                     0                        0           0   
+
+            name_Black SUV  name_Lux  name_Lux Black  name_Lux Black XL  \
+    115007               1         0               0                  0   
+    670542               0         0               0                  0   
+    676014               0         0               0                  0   
+
+            name_Lyft  name_Lyft XL  name_Shared  name_UberPool  name_UberX  \
+    115007          0             0            0              0           0   
+    670542          0             0            1              0           0   
+    676014          0             0            0              0           1   
+
+            name_UberXL  name_WAV  short_summary_ Clear   short_summary_ Drizzle   \
+    115007            0         0                      0                        0   
+    670542            0         0                      0                        0   
+    676014            0         0                      0                        0   
+
+            short_summary_ Foggy   short_summary_ Light Rain   \
+    115007                      0                           0   
+    670542                      1                           0   
+    676014                      0                           0   
+
+            short_summary_ Mostly Cloudy   short_summary_ Overcast   \
+    115007                              1                         0   
+    670542                              0                         0   
+    676014                              0                         0   
+
+            short_summary_ Partly Cloudy   short_summary_ Possible Drizzle   \
+    115007                              0                                 0   
+    670542                              0                                 0   
+    676014                              0                                 0   
+
+            short_summary_ Rain   
+    115007                     0  
+    670542                     0  
+    676014                     1  
+
+Normalization
+
+    scaler = RobustScaler()
+
+    scaled_data = scaler.fit_transform(df)
+
+    scaled_df = pd.DataFrame(scaled_data, columns=df.columns)
+
+    scaled_df.head()
+
+       hour   day  month  price  distance  surge_multiplier  temperature  \
+    0 -0.25 -0.07   0.00  -0.63     -1.04              0.00         0.26   
+    1 -0.83  0.67  -1.00  -0.19     -1.04              0.00         0.43   
+    2 -0.92  0.73  -1.00  -0.48     -1.04              0.00        -0.30   
+    3 -0.67  0.87  -1.00   0.93     -1.04              0.00        -0.86   
+    4 -0.75  0.80  -1.00  -0.33     -1.04              0.00        -0.43   
+
+       precipIntensity  precipProbability  humidity  windSpeed  windGust  \
+    0             0.00               0.00     -0.12       0.55      0.21   
+    1             0.13               1.00      0.96       1.21      0.58   
+    2             0.00               0.00      0.17       0.28     -0.03   
+    3             0.00               0.00      0.08      -0.13     -0.30   
+    4             0.00               0.00     -0.04       0.65      0.21   
+
+       visibility  dewPoint  pressure  windBearing  cloudCover  uvIndex  \
+    0        0.08      0.19      0.58        -1.12       -0.16     0.00   
+    1       -3.26      1.05     -0.24        -0.94        0.29     0.00   
+    2        0.08      0.04     -0.77        -0.10       -1.25     0.00   
+    3        0.08     -0.38      0.20         0.29       -1.30     0.00   
+    4        0.08     -0.20     -0.49         0.25       -0.60     0.00   
+
+       visibility.1  ozone  moonPhase  precipIntensityMax  source_Back Bay  \
+    0          0.08  -0.09      -0.78                1.39             0.00   
+    1         -3.26  -0.40      -0.08                1.41             0.00   
+    2          0.08   0.20       0.00                1.16             0.00   
+    3          0.08  -0.40       0.14               -0.00             0.00   
+    4          0.08   0.99       0.08               -0.00             0.00   
+
+       source_Beacon Hill  source_Boston University  source_Fenway  \
+    0                0.00                      0.00           0.00   
+    1                0.00                      0.00           0.00   
+    2                0.00                      0.00           0.00   
+    3                0.00                      0.00           0.00   
+    4                0.00                      0.00           0.00   
+
+       source_Financial District  source_Haymarket Square  source_North End  \
+    0                       0.00                     1.00              0.00   
+    1                       0.00                     1.00              0.00   
+    2                       0.00                     1.00              0.00   
+    3                       0.00                     1.00              0.00   
+    4                       0.00                     1.00              0.00   
+
+       source_North Station  source_Northeastern University  source_South Station  \
+    0                  0.00                            0.00                  0.00   
+    1                  0.00                            0.00                  0.00   
+    2                  0.00                            0.00                  0.00   
+    3                  0.00                            0.00                  0.00   
+    4                  0.00                            0.00                  0.00   
+
+       source_Theatre District  source_West End  destination_Back Bay  \
+    0                     0.00             0.00                  0.00   
+    1                     0.00             0.00                  0.00   
+    2                     0.00             0.00                  0.00   
+    3                     0.00             0.00                  0.00   
+    4                     0.00             0.00                  0.00   
+
+       destination_Beacon Hill  destination_Boston University  destination_Fenway  \
+    0                     0.00                           0.00                0.00   
+    1                     0.00                           0.00                0.00   
+    2                     0.00                           0.00                0.00   
+    3                     0.00                           0.00                0.00   
+    4                     0.00                           0.00                0.00   
+
+       destination_Financial District  destination_Haymarket Square  \
+    0                            0.00                          0.00   
+    1                            0.00                          0.00   
+    2                            0.00                          0.00   
+    3                            0.00                          0.00   
+    4                            0.00                          0.00   
+
+       destination_North End  destination_North Station  \
+    0                   0.00                       1.00   
+    1                   0.00                       1.00   
+    2                   0.00                       1.00   
+    3                   0.00                       1.00   
+    4                   0.00                       1.00   
+
+       destination_Northeastern University  destination_South Station  \
+    0                                 0.00                       0.00   
+    1                                 0.00                       0.00   
+    2                                 0.00                       0.00   
+    3                                 0.00                       0.00   
+    4                                 0.00                       0.00   
+
+       destination_Theatre District  destination_West End  cab_type_Lyft  \
+    0                          0.00                  0.00           1.00   
+    1                          0.00                  0.00           1.00   
+    2                          0.00                  0.00           1.00   
+    3                          0.00                  0.00           1.00   
+    4                          0.00                  0.00           1.00   
+
+       cab_type_Uber  product_id_55c66225-fbe7-4fd5-9072-eab1ece5e23e  \
+    0          -1.00                                             0.00   
+    1          -1.00                                             0.00   
+    2          -1.00                                             0.00   
+    3          -1.00                                             0.00   
+    4          -1.00                                             0.00   
+
+       product_id_6c84fd89-3f11-4782-9b50-97c468b19529  \
+    0                                             0.00   
+    1                                             0.00   
+    2                                             0.00   
+    3                                             0.00   
+    4                                             0.00   
+
+       product_id_6d318bcc-22a3-4af6-bddd-b409bfce1546  \
+    0                                             0.00   
+    1                                             0.00   
+    2                                             0.00   
+    3                                             0.00   
+    4                                             0.00   
+
+       product_id_6f72dfc5-27f1-42e8-84db-ccc7a75f6969  \
+    0                                             0.00   
+    1                                             0.00   
+    2                                             0.00   
+    3                                             0.00   
+    4                                             0.00   
+
+       product_id_997acbb5-e102-41e1-b155-9df7de0a73f2  \
+    0                                             0.00   
+    1                                             0.00   
+    2                                             0.00   
+    3                                             0.00   
+    4                                             0.00   
+
+       product_id_9a0e7b09-b92b-4c41-9779-2ad22b4d779d  product_id_lyft  \
+    0                                             0.00             0.00   
+    1                                             0.00             0.00   
+    2                                             0.00             1.00   
+    3                                             0.00             0.00   
+    4                                             0.00             0.00   
+
+       product_id_lyft_line  product_id_lyft_lux  product_id_lyft_luxsuv  \
+    0                  1.00                 0.00                    0.00   
+    1                  0.00                 0.00                    0.00   
+    2                  0.00                 0.00                    0.00   
+    3                  0.00                 0.00                    1.00   
+    4                  0.00                 0.00                    0.00   
+
+       product_id_lyft_plus  product_id_lyft_premier  name_Black  name_Black SUV  \
+    0                  0.00                     0.00        0.00            0.00   
+    1                  0.00                     1.00        0.00            0.00   
+    2                  0.00                     0.00        0.00            0.00   
+    3                  0.00                     0.00        0.00            0.00   
+    4                  1.00                     0.00        0.00            0.00   
+
+       name_Lux  name_Lux Black  name_Lux Black XL  name_Lyft  name_Lyft XL  \
+    0      0.00            0.00               0.00       0.00          0.00   
+    1      1.00            0.00               0.00       0.00          0.00   
+    2      0.00            0.00               0.00       1.00          0.00   
+    3      0.00            0.00               1.00       0.00          0.00   
+    4      0.00            0.00               0.00       0.00          1.00   
+
+       name_Shared  name_UberPool  name_UberX  name_UberXL  name_WAV  \
+    0         1.00           0.00        0.00         0.00      0.00   
+    1         0.00           0.00        0.00         0.00      0.00   
+    2         0.00           0.00        0.00         0.00      0.00   
+    3         0.00           0.00        0.00         0.00      0.00   
+    4         0.00           0.00        0.00         0.00      0.00   
+
+       short_summary_ Clear   short_summary_ Drizzle   short_summary_ Foggy   \
+    0                   0.00                     0.00                   0.00   
+    1                   0.00                     0.00                   0.00   
+    2                   1.00                     0.00                   0.00   
+    3                   1.00                     0.00                   0.00   
+    4                   0.00                     0.00                   0.00   
+
+       short_summary_ Light Rain   short_summary_ Mostly Cloudy   \
+    0                        0.00                           1.00   
+    1                        0.00                           0.00   
+    2                        0.00                           0.00   
+    3                        0.00                           0.00   
+    4                        0.00                           0.00   
+
+       short_summary_ Overcast   short_summary_ Partly Cloudy   \
+    0                      0.00                           0.00   
+    1                      0.00                           0.00   
+    2                      0.00                           0.00   
+    3                      0.00                           0.00   
+    4                      0.00                           1.00   
+
+       short_summary_ Possible Drizzle   short_summary_ Rain   
+    0                              0.00                  0.00  
+    1                              0.00                  1.00  
+    2                              0.00                  0.00  
+    3                              0.00                  0.00  
+    4                              0.00                  0.00  
+
+    X = scaled_df.drop(columns='price')
+    y = scaled_df['price']
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y)
+
+Pendefinisian Model
+
+Setelah dilakukan data cleaning dan data preprocessing, data tersebut
+kemudian akan digunakan untuk pelatihan model. Model yang akan dipakai
+pada project ini adalah linear regression. Linear Regression adalah
+algoritma yang menggunakan prinsip regresi yang paling sederhana dan
+banyak digunakan serta kemudahan dalam interpretasi hasil.
+
+    # Membuat model Linear Regression
+    lr = LinearRegression()
+
+Pelatihan Model
+
+Pelatihan model merupakan proses untuk menjalankan algoritma yang
+didalamnya sudah terbagi menjadi data training untuk mendapatkan output
+tertentu
+
+    import joblib
+    # Melakukan pelatihan model
+    lr.fit(X_train, y_train)
+
+    # Simpan model ke dalam file 'model.pkl'
+    joblib.dump(lr, 'model.pkl')
+
+    ['model.pkl']
+
+Evaluasi Model
+
+Evaluasi model merupakan menguji akurasi dari data testing. Evaluasi
+dilakukan dengan menggunakan MSE (Mean Squared Error), semakin rendah
+nilai MSE semakin baik model.
+
+    y_pred = lr.predict(X_test)
+
+    mse = mean_squared_error(y_test, y_pred)
+    print('MSE Linear Regression:', mse)
+
+    MSE Linear Regression: 0.027441274250639292
+
+Model Inference
+
+Model Inference merupakan pelatihan model yang kita buat dengan data
+selain data yang sudah tersedia. Model tersebut kita latih dengan data
+yang telah dibuat seperti dibawah ini.
+
+    X_train.sample(3)
+
+            hour  day  month  distance  surge_multiplier  temperature  \
+    45988   0.00 0.67  -1.00      0.29              0.00         0.81   
+    573184  0.08 0.00   0.00      0.53              0.00        -0.74   
+    479729 -0.25 0.60  -1.00      1.46              0.25         0.16   
+
+            precipIntensity  precipProbability  humidity  windSpeed  windGust  \
+    45988              0.03               0.94      0.83      -0.27     -0.39   
+    573184             0.00               0.00      0.75       0.39      0.12   
+    479729             0.00               0.00      0.83      -0.73     -0.69   
+
+            visibility  dewPoint  pressure  windBearing  cloudCover  uvIndex  \
+    45988        -4.21      1.25     -0.95        -0.32        0.29     0.00   
+    573184       -0.91      0.14     -0.23         0.40        0.29     0.00   
+    479729       -4.87      0.80      0.25        -1.14        0.29     0.00   
+
+            visibility.1  ozone  moonPhase  precipIntensityMax  source_Back Bay  \
+    45988          -4.21   0.16       0.00                1.55             0.00   
+    573184         -0.91   0.44      -0.71                0.19             0.00   
+    479729         -4.87  -0.16      -0.08                1.34             0.00   
+
+            source_Beacon Hill  source_Boston University  source_Fenway  \
+    45988                 0.00                      0.00           0.00   
+    573184                0.00                      0.00           0.00   
+    479729                0.00                      0.00           0.00   
+
+            source_Financial District  source_Haymarket Square  source_North End  \
+    45988                        0.00                     0.00              0.00   
+    573184                       0.00                     0.00              0.00   
+    479729                       1.00                     0.00              0.00   
+
+            source_North Station  source_Northeastern University  \
+    45988                   0.00                            0.00   
+    573184                  1.00                            0.00   
+    479729                  0.00                            0.00   
+
+            source_South Station  source_Theatre District  source_West End  \
+    45988                   0.00                     0.00             1.00   
+    573184                  0.00                     0.00             0.00   
+    479729                  0.00                     0.00             0.00   
+
+            destination_Back Bay  destination_Beacon Hill  \
+    45988                   0.00                     0.00   
+    573184                  0.00                     0.00   
+    479729                  0.00                     0.00   
+
+            destination_Boston University  destination_Fenway  \
+    45988                            0.00                0.00   
+    573184                           1.00                0.00   
+    479729                           0.00                1.00   
+
+            destination_Financial District  destination_Haymarket Square  \
+    45988                             0.00                          0.00   
+    573184                            0.00                          0.00   
+    479729                            0.00                          0.00   
+
+            destination_North End  destination_North Station  \
+    45988                    0.00                       0.00   
+    573184                   0.00                       0.00   
+    479729                   0.00                       0.00   
+
+            destination_Northeastern University  destination_South Station  \
+    45988                                  1.00                       0.00   
+    573184                                 0.00                       0.00   
+    479729                                 0.00                       0.00   
+
+            destination_Theatre District  destination_West End  cab_type_Lyft  \
+    45988                           0.00                  0.00           0.00   
+    573184                          0.00                  0.00           0.00   
+    479729                          0.00                  0.00           1.00   
+
+            cab_type_Uber  product_id_55c66225-fbe7-4fd5-9072-eab1ece5e23e  \
+    45988            0.00                                             0.00   
+    573184           0.00                                             0.00   
+    479729          -1.00                                             0.00   
+
+            product_id_6c84fd89-3f11-4782-9b50-97c468b19529  \
+    45988                                              0.00   
+    573184                                             0.00   
+    479729                                             0.00   
+
+            product_id_6d318bcc-22a3-4af6-bddd-b409bfce1546  \
+    45988                                              0.00   
+    573184                                             0.00   
+    479729                                             0.00   
+
+            product_id_6f72dfc5-27f1-42e8-84db-ccc7a75f6969  \
+    45988                                              1.00   
+    573184                                             0.00   
+    479729                                             0.00   
+
+            product_id_997acbb5-e102-41e1-b155-9df7de0a73f2  \
+    45988                                              0.00   
+    573184                                             1.00   
+    479729                                             0.00   
+
+            product_id_9a0e7b09-b92b-4c41-9779-2ad22b4d779d  product_id_lyft  \
+    45988                                              0.00             0.00   
+    573184                                             0.00             0.00   
+    479729                                             0.00             0.00   
+
+            product_id_lyft_line  product_id_lyft_lux  product_id_lyft_luxsuv  \
+    45988                   0.00                 0.00                    0.00   
+    573184                  0.00                 0.00                    0.00   
+    479729                  0.00                 0.00                    0.00   
+
+            product_id_lyft_plus  product_id_lyft_premier  name_Black  \
+    45988                   0.00                     0.00        0.00   
+    573184                  0.00                     0.00        0.00   
+    479729                  0.00                     1.00        0.00   
+
+            name_Black SUV  name_Lux  name_Lux Black  name_Lux Black XL  \
+    45988             0.00      0.00            0.00               0.00   
+    573184            0.00      0.00            0.00               0.00   
+    479729            0.00      1.00            0.00               0.00   
+
+            name_Lyft  name_Lyft XL  name_Shared  name_UberPool  name_UberX  \
+    45988        0.00          0.00         0.00           0.00        0.00   
+    573184       0.00          0.00         0.00           1.00        0.00   
+    479729       0.00          0.00         0.00           0.00        0.00   
+
+            name_UberXL  name_WAV  short_summary_ Clear   short_summary_ Drizzle   \
+    45988          1.00      0.00                   0.00                     0.00   
+    573184         0.00      0.00                   0.00                     0.00   
+    479729         0.00      0.00                   0.00                     0.00   
+
+            short_summary_ Foggy   short_summary_ Light Rain   \
+    45988                    0.00                        1.00   
+    573184                   0.00                        0.00   
+    479729                   0.00                        0.00   
+
+            short_summary_ Mostly Cloudy   short_summary_ Overcast   \
+    45988                            0.00                      0.00   
+    573184                           0.00                      1.00   
+    479729                           0.00                      1.00   
+
+            short_summary_ Partly Cloudy   short_summary_ Possible Drizzle   \
+    45988                            0.00                              0.00   
+    573184                           0.00                              0.00   
+    479729                           0.00                              0.00   
+
+            short_summary_ Rain   
+    45988                   0.00  
+    573184                  0.00  
+    479729                  0.00  
+
+    # Membuat dataframe baru yang berisi 3 sample acak
+    data_inference = X_train.sample(3)
+
+    # Meload model dari file 'model.pkl'
+    model = joblib.load('model.pkl')
+
+    # Lakukan prediksi
+    y_pred_inference = model.predict(data_inference)
+
+    # Menampilkan hasil prediksi
+    print("Hasil Prediksi data baru:")
+    print(y_pred_inference)
+
+    Hasil Prediksi data baru:
+    [1.25446439 0.31952024 0.84010053]
+
+    # Visualisasi prediksi
+    plt.figure(figsize=(8, 6))
+    plt.plot(range(len(y_pred_inference)), y_pred_inference, label='Prediksi', marker='o', linestyle='-', color='b')
+    plt.xlabel('Data Point')
+    plt.ylabel('Nilai')
+    plt.title('Grafik Hasil Prediksi')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+[]
+
+    # Deskripsi statistik
+    mean_pred = np.mean(y_pred_inference)
+    median_pred = np.median(y_pred_inference)
+    std_dev_pred = np.std(y_pred_inference)
+
+    print(f"Rata-rata Prediksi: {mean_pred}")
+    print(f"Median Prediksi: {median_pred}")
+    print(f"Deviasi Standar Prediksi: {std_dev_pred}")
+
+    Rata-rata Prediksi: 0.8046950499216715
+    Median Prediksi: 0.8401005268096924
+    Deviasi Standar Prediksi: 0.38250952325744103
+
+    df_new = {'hour' : [0.45, 0.26, 0.34],
+              'day' : [0.23, 0.29, 0.56], 
+              'month' : [0.00, 0.00, 0.00], 
+              'distance' : [0.73, 0.24, 0.14], 
+              'surge_multiplier' :[1.00, 0.33, 1.00],
+              'temperature' : [1.43, 0.67, 0.18],
+              'precipIntensity' : [0.00, 0.00, 0.00],
+              'precipProbability' : [0.00, 0.00, 0.00],
+              'humidity' : [0.43, 0.38, 0.67],
+              'windSpeed' : [0.67, 0.67, 0.67],
+              'windGust' : [0.90, 0.29, 0.45],
+              'visibility' : [0.03, 0.05, 0.05],
+              'dewPoint' : [0.72, 0.72, 1.43],
+              'pressure' : [0.04, 0.57, 0.04],
+              'windBearing' : [0.03, 0.02, 0.21],
+              'cloudCover' : [0.27, 0.29, 0.53],
+              'uvIndex' : [0.00, 0.00, 0.00],
+              'visibility.1' :[0.02, 0.02, 0.02],
+              'ozone' : [1.00, 1.00, 0.42],
+              'moonPhase' : [0.08, 0.08, 0.24],
+              'precipIntensityMax' : [1.31, 1.27, 0.24],
+              'source_BackBay' : [0.00, 0.00, 0.00],
+              'source_beacon_Hill' : [0.00, 0.00, 0.00],
+              'source_BostonUniversity' : [0.00, 0.00, 0.00],
+              'source_Fenway' : [0.00, 0.00, 0.00],
+              'source_FinancialDistrict' : [1.00, 0.00, 0.00],
+              'source_HaymarketSquare' : [0.00, 0.00, 0.00],
+              'source_NorthEnd' : [0.00, 0.00, 0.00],
+              'source_NorthStation' : [0.00, 0.00, 0.00],
+              'source_NortheasternUniversity' : [0.00, 0.00, 0.00],
+              'source_SouthStation' : [0.00, 0.00, 0.00],
+              'source_TheatreDistrict' : [0.00, 0.00, 0.00],
+              'source_WestEnd' : [0.00, 0.00, 0.00],
+              'destination_Back Bay' : [0.00, 0.00, 0.00],
+              'destination_Beacon Hill' : [0.00, 0.00, 0.00],
+              'destination_Boston University' :  [0.00, 0.00, 0.00],
+              'destination_Fenway' :  [0.00, 0.00, 0.00],
+              'destination_Financial District' : [0.00, 0.00, 0.00],
+              'destination_Haymarket Square' : [0.00, 0.00, 0.00],
+              'destination_North End':  [0.00, 0.00, 0.00],
+              'destination_North Station' : [0.00, 0.00, 0.00],
+              'destination_Northeastern University' : [0.00, 0.00, 0.00],
+              'destination_South Station' : [0.00, 0.00, 0.00],
+              'destination_Theatre District' : [0.00, 0.00, 0.00],
+              'destination_West End' : [0.00, 0.00, 0.00],
+              'cab_Type_Lyft' : [0.00, 0.00, 0.00],
+              'cab_Type_Uber' : [0.00, 0.00, 0.00],
+              'product_id_55c66225-fbe7-4fd5-9072-eab1ece5e23e' : [0.00, 0.00, 0.00],
+              'product_id_6c84fd89-3f11-4782-9b50-97c468b19529': [0.00, 0.00, 0.00],
+              'product_id_6d318bcc-22a3-4af6-bddd-b409bfce1546': [0.00, 0.00, 0.00],
+              'product_id_6f72dfc5-27f1-42e8-84db-ccc7a75f6969': [0.00, 0.00, 0.00],
+              'product_id_9a0e7b09-b92b-4c41-9779-2ad22b4d779d': [0.00, 0.00, 0.00],
+              'product_id_lyft_lux': [0.00, 0.00, 0.00],	
+              'product_id_lyft_luxsuv': [0.00, 0.00, 0.00],
+              'product_id_lyft_plus': [0.00, 0.00, 0.00],	
+              'product_id_lyft_premier': [0.00, 0.00, 0.00],	
+              'name_Black': [0.00, 0.00, 0.00],	
+              'name_Black SUV': [0.00, 0.00, 0.00],	
+              'name_Lux': [0.00, 0.00, 0.00],	
+              'name_Lux Black': [0.00, 0.00, 0.00],	
+              'name_Lux Black XL': [0.00, 0.00, 0.00],	
+              'name_Lyft XL': [0.00, 0.00, 0.00],	
+              'name_UberX': [0.00, 0.00, 0.00],	
+              'name_UberXL': [0.00, 0.00, 0.00],	
+              'name_WAV': [0.00, 0.00, 0.00],
+              'short_summary_ Clear': [0.00, 0.00, 0.00],	
+              'short_summary_ Drizzle': [0.00, 0.00, 0.00],	
+              'short_summary_ Foggy': [0.00, 0.00, 0.00],	
+              'short_summary_ Light Rain': [0.00, 0.00, 0.00],	
+              'short_summary_ Mostly Cloudy': [0.00, 0.00, 0.00],	
+              'short_summary_ Overcast': [0.00, 0.00, 0.00],
+              'short_summary_ Partly Cloudy': [0.00, 0.00, 0.00],	
+              'short_summary_ Possible Drizzle': [0.00, 0.00, 0.00],	
+              'short_summary_ Rain': [0.00, 0.00, 0.00]}
+
+    data = pd.DataFrame(df_new)
+    data
+
+       hour  day  month  distance  surge_multiplier  temperature  precipIntensity  \
+    0  0.45 0.23   0.00      0.73              1.00         1.43             0.00   
+    1  0.26 0.29   0.00      0.24              0.33         0.67             0.00   
+    2  0.34 0.56   0.00      0.14              1.00         0.18             0.00   
+
+       precipProbability  humidity  windSpeed  windGust  visibility  dewPoint  \
+    0               0.00      0.43       0.67      0.90        0.03      0.72   
+    1               0.00      0.38       0.67      0.29        0.05      0.72   
+    2               0.00      0.67       0.67      0.45        0.05      1.43   
+
+       pressure  windBearing  cloudCover  uvIndex  visibility.1  ozone  moonPhase  \
+    0      0.04         0.03        0.27     0.00          0.02   1.00       0.08   
+    1      0.57         0.02        0.29     0.00          0.02   1.00       0.08   
+    2      0.04         0.21        0.53     0.00          0.02   0.42       0.24   
+
+       precipIntensityMax  source_BackBay  source_beacon_Hill  \
+    0                1.31            0.00                0.00   
+    1                1.27            0.00                0.00   
+    2                0.24            0.00                0.00   
+
+       source_BostonUniversity  source_Fenway  source_FinancialDistrict  \
+    0                     0.00           0.00                      1.00   
+    1                     0.00           0.00                      0.00   
+    2                     0.00           0.00                      0.00   
+
+       source_HaymarketSquare  source_NorthEnd  source_NorthStation  \
+    0                    0.00             0.00                 0.00   
+    1                    0.00             0.00                 0.00   
+    2                    0.00             0.00                 0.00   
+
+       source_NortheasternUniversity  source_SouthStation  source_TheatreDistrict  \
+    0                           0.00                 0.00                    0.00   
+    1                           0.00                 0.00                    0.00   
+    2                           0.00                 0.00                    0.00   
+
+       source_WestEnd  destination_Back Bay  destination_Beacon Hill  \
+    0            0.00                  0.00                     0.00   
+    1            0.00                  0.00                     0.00   
+    2            0.00                  0.00                     0.00   
+
+       destination_Boston University  destination_Fenway  \
+    0                           0.00                0.00   
+    1                           0.00                0.00   
+    2                           0.00                0.00   
+
+       destination_Financial District  destination_Haymarket Square  \
+    0                            0.00                          0.00   
+    1                            0.00                          0.00   
+    2                            0.00                          0.00   
+
+       destination_North End  destination_North Station  \
+    0                   0.00                       0.00   
+    1                   0.00                       0.00   
+    2                   0.00                       0.00   
+
+       destination_Northeastern University  destination_South Station  \
+    0                                 0.00                       0.00   
+    1                                 0.00                       0.00   
+    2                                 0.00                       0.00   
+
+       destination_Theatre District  destination_West End  cab_Type_Lyft  \
+    0                          0.00                  0.00           0.00   
+    1                          0.00                  0.00           0.00   
+    2                          0.00                  0.00           0.00   
+
+       cab_Type_Uber  product_id_55c66225-fbe7-4fd5-9072-eab1ece5e23e  \
+    0           0.00                                             0.00   
+    1           0.00                                             0.00   
+    2           0.00                                             0.00   
+
+       product_id_6c84fd89-3f11-4782-9b50-97c468b19529  \
+    0                                             0.00   
+    1                                             0.00   
+    2                                             0.00   
+
+       product_id_6d318bcc-22a3-4af6-bddd-b409bfce1546  \
+    0                                             0.00   
+    1                                             0.00   
+    2                                             0.00   
+
+       product_id_6f72dfc5-27f1-42e8-84db-ccc7a75f6969  \
+    0                                             0.00   
+    1                                             0.00   
+    2                                             0.00   
+
+       product_id_9a0e7b09-b92b-4c41-9779-2ad22b4d779d  product_id_lyft_lux  \
+    0                                             0.00                 0.00   
+    1                                             0.00                 0.00   
+    2                                             0.00                 0.00   
+
+       product_id_lyft_luxsuv  product_id_lyft_plus  product_id_lyft_premier  \
+    0                    0.00                  0.00                     0.00   
+    1                    0.00                  0.00                     0.00   
+    2                    0.00                  0.00                     0.00   
+
+       name_Black  name_Black SUV  name_Lux  name_Lux Black  name_Lux Black XL  \
+    0        0.00            0.00      0.00            0.00               0.00   
+    1        0.00            0.00      0.00            0.00               0.00   
+    2        0.00            0.00      0.00            0.00               0.00   
+
+       name_Lyft XL  name_UberX  name_UberXL  name_WAV  short_summary_ Clear  \
+    0          0.00        0.00         0.00      0.00                  0.00   
+    1          0.00        0.00         0.00      0.00                  0.00   
+    2          0.00        0.00         0.00      0.00                  0.00   
+
+       short_summary_ Drizzle  short_summary_ Foggy  short_summary_ Light Rain  \
+    0                    0.00                  0.00                       0.00   
+    1                    0.00                  0.00                       0.00   
+    2                    0.00                  0.00                       0.00   
+
+       short_summary_ Mostly Cloudy  short_summary_ Overcast  \
+    0                          0.00                     0.00   
+    1                          0.00                     0.00   
+    2                          0.00                     0.00   
+
+       short_summary_ Partly Cloudy  short_summary_ Possible Drizzle  \
+    0                          0.00                             0.00   
+    1                          0.00                             0.00   
+    2                          0.00                             0.00   
+
+       short_summary_ Rain  
+    0                 0.00  
+    1                 0.00  
+    2                 0.00  
+
+Kesimpulan
+
+Berdasarkan analisis yang telah dilakukan dapat disimpulkan :
+
+-   Tipe kendaraan Lyft relatif lebih mahal dibandingkan dengan tipe
+    kendaraan Uber sehingga Uber lebih banyak pengguna dibandingkan
+    Lyft.
+-   Cuaca memengaruhi tingkat pemesanan taxi dan rata-rata orang memesan
+    pada saat Overcast
+-   Berdasarkan evaluasi, model dengan Linear Regression memiliki nilai
+    MSE yang kecil yaitu sebesar 0.027488 yang menunjukkan bahwa model
+    tersebut cukup baik dalam memprediksi harga. Semakin kecil nilai MSE
+    maka semakin akurat juga model dalam memprediksi.
+-   Beberapa faktor yang berpengaruh signifikan terhadap harga taksi,
+    seperti jarak tempuh, cuaca, dan tipe kendaraan.
